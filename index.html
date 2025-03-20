@@ -7,16 +7,24 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="my-map"></div>
+    <div id="map-container">
+        <div id="my-map"></div>
+        <div id="side-filter-container">Main filter box here</div>
+    </div>
+    <div id="nonmap-container"> 
+        <div id="timeline-container"></div>
+    </div>
     
     <script src="js/d3.v6.min.js"></script>
     <script src="js/leaflet.js"></script>
 
 
-    <script src="js/main.js"></script>
+    <script type="module" src="js/main.js"></script>
     <script src="js/leafletMap.js"></script>
+    <script type="module" src="js/timeline.js"></script>
 
     <div id="tooltip"></div>
+
 
 
 </body>
