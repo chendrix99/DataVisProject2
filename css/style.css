@@ -18,3 +18,16 @@
   font-size: 10px;
   color: #888;
 }
+.settings {
+  position: fixed;
+  bottom: 0px;
+  left: 0px;
+  padding-bottom: 10px;
+  padding-left: 15px;
+  z-index: 2;
+}
+
+.btn {
+  cursor: pointer;
+  font-size: 1.2em;
+}
