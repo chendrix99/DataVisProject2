@@ -1,6 +1,12 @@
 #my-map {
   width: 100%;
   height: 500px;
+  margin-right: 20px;
+}
+#map-container {
+  display: flex;
+  flex-direction: row;
+  margin: 20px 50px 30px 50px;
 }
 
 #tooltip {
@@ -60,4 +66,20 @@
   right: 15px;
   font-size: 24px;
   cursor: pointer;
+}
+
+#nonmap-container {
+  display: flex;
+  flex-direction: row;
+  margin: 0 50px 0 50px;
+}
+#timeline-container {
+  flex: 0 0 80%;
+  width: 100%;
+  height: 150px;
+}
+
+#side-filter-container {
+  flex: 0 0 20%;
+  background-color: green;
 }

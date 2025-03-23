@@ -25,13 +25,71 @@
       <a id="settings-btn" class="btn">⚙️</a>
     </div>
 
-    <div id="my-map"></div>
+    <div id="map-container">
+      <div id="my-map"></div>
+      <div id="side-filter-container">
+        <div class="filter-group">
+          <input type="checkbox" id="filter-depth" />
+          <label for="filter-depth">Depth</label>
+          <input
+            type="number"
+            class="filter-input"
+            id="min-depth"
+            placeholder="Min"
+          />
+          <input
+            type="number"
+            class="filter-input"
+            id="max-depth"
+            placeholder="Max"
+          />
+        </div>
+        <div class="filter-group">
+          <input type="checkbox" id="filter-magnitude" />
+          <label for="filter-magnitude">Magnitude</label>
+          <input
+            type="number"
+            class="filter-input"
+            id="min-magnitude"
+            placeholder="Min"
+          />
+          <input
+            type="number"
+            class="filter-input"
+            id="max-magnitude"
+            placeholder="Max"
+          />
+        </div>
+        <div class="filter-group">
+          <input type="checkbox" id="filter-duration" />
+          <label for="filter-duration">Duration</label>
+          <input
+            type="number"
+            class="filter-input"
+            id="min-duration"
+            placeholder="Min"
+          />
+          <input
+            type="number"
+            class="filter-input"
+            id="max-duration"
+            placeholder="Max"
+          />
+        </div>
+        <button id="apply-filter">Filter</button>
+        <button id="clear-filter">Clear</button>
+      </div>
+    </div>
+    <div id="nonmap-container">
+      <div id="timeline-container"></div>
+    </div>
 
     <script src="js/d3.v6.min.js"></script>
     <script src="js/leaflet.js"></script>
 
-    <script src="js/main.js"></script>
+    <script type="module" src="js/main.js"></script>
     <script src="js/leafletMap.js"></script>
+    <script type="module" src="js/timeline.js"></script>
 
     <div id="tooltip"></div>
 
