@@ -1,44 +1,91 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Interactive map with Leaflet</title>
     <link rel="icon" href="data:;base64,iVBORwOKGO=" />
-    <link rel="stylesheet" href="css/leaflet.css">
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="css/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div id="settings-popup" class="popup">
+      <div class="popup-content">
+        <span class="close-btn" id="close-popup">&times;</span>
+        <h2>Settings</h2>
+        <p>Change the map background:</p>
+        <select id="map-style-select">
+          <option value="Esri.WorldImagery">Esri Satellite</option>
+          <option value="OpenTopoMap">OpenTopoMap</option>
+          <option value="Thunderforest.Outdoors">Thunderforest Outdoors</option>
+          <option value="Stamen.Terrain">Stamen Terrain</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="settings">
+      <a id="settings-btn" class="btn">⚙️</a>
+    </div>
+
     <div id="map-container">
-        <div id="my-map"></div>
-        <div id="side-filter-container">
-            <div class="filter-group">
-                <input type="checkbox" id="filter-depth">
-                <label for="filter-depth">Depth</label>
-                <input type="number" class="filter-input" id="min-depth" placeholder="Min">
-                <input type="number" class="filter-input" id="max-depth" placeholder="Max">
-            </div>
-            <div class="filter-group">
-                <input type="checkbox" id="filter-magnitude">
-                <label for="filter-magnitude">Magnitude</label>
-                <input type="number" class="filter-input" id="min-magnitude" placeholder="Min">
-                <input type="number" class="filter-input" id="max-magnitude" placeholder="Max">
-            </div>
-            <div class="filter-group">
-                <input type="checkbox" id="filter-duration">
-                <label for="filter-duration">Duration</label>
-                <input type="number" class="filter-input" id="min-duration" placeholder="Min">
-                <input type="number" class="filter-input" id="max-duration" placeholder="Max">
-            </div>
-            <button id="apply-filter">Filter</button>
-            <button id="clear-filter">Clear</button>
+      <div id="my-map"></div>
+      <div id="side-filter-container">
+        <div class="filter-group">
+          <input type="checkbox" id="filter-depth" />
+          <label for="filter-depth">Depth</label>
+          <input
+            type="number"
+            class="filter-input"
+            id="min-depth"
+            placeholder="Min"
+          />
+          <input
+            type="number"
+            class="filter-input"
+            id="max-depth"
+            placeholder="Max"
+          />
         </div>
+        <div class="filter-group">
+          <input type="checkbox" id="filter-magnitude" />
+          <label for="filter-magnitude">Magnitude</label>
+          <input
+            type="number"
+            class="filter-input"
+            id="min-magnitude"
+            placeholder="Min"
+          />
+          <input
+            type="number"
+            class="filter-input"
+            id="max-magnitude"
+            placeholder="Max"
+          />
+        </div>
+        <div class="filter-group">
+          <input type="checkbox" id="filter-duration" />
+          <label for="filter-duration">Duration</label>
+          <input
+            type="number"
+            class="filter-input"
+            id="min-duration"
+            placeholder="Min"
+          />
+          <input
+            type="number"
+            class="filter-input"
+            id="max-duration"
+            placeholder="Max"
+          />
+        </div>
+        <button id="apply-filter">Filter</button>
+        <button id="clear-filter">Clear</button>
+      </div>
     </div>
-    <div id="nonmap-container"> 
-        <div id="timeline-container"></div>
+    <div id="nonmap-container">
+      <div id="timeline-container"></div>
     </div>
-    
+
     <script src="js/d3.v6.min.js"></script>
     <script src="js/leaflet.js"></script>
-
 
     <script type="module" src="js/main.js"></script>
     <script src="js/leafletMap.js"></script>
@@ -46,7 +93,25 @@
 
     <div id="tooltip"></div>
 
+    <script>
+      document
+        .getElementById("settings-btn")
+        .addEventListener("click", function () {
+          document.getElementById("settings-popup").style.display = "block";
+        });
 
+      document
+        .getElementById("close-popup")
+        .addEventListener("click", function () {
+          document.getElementById("settings-popup").style.display = "none";
+        });
 
-</body>
+      window.addEventListener("click", function (event) {
+        let popup = document.getElementById("settings-popup");
+        if (event.target === popup) {
+          popup.style.display = "none";
+        }
+      });
+    </script>
+  </body>
 </html>
