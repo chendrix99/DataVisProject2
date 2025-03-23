@@ -7,8 +7,22 @@
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
+    <div id="settings-popup" class="popup">
+      <div class="popup-content">
+        <span class="close-btn" id="close-popup">&times;</span>
+        <h2>Settings</h2>
+        <p>Change the map background:</p>
+        <select id="map-style-select">
+          <option value="Esri.WorldImagery">Esri Satellite</option>
+          <option value="OpenTopoMap">OpenTopoMap</option>
+          <option value="Thunderforest.Outdoors">Thunderforest Outdoors</option>
+          <option value="Stamen.Terrain">Stamen Terrain</option>
+        </select>
+      </div>
+    </div>
+
     <div class="settings">
-      <a class="btn">⚙️</a>
+      <a id="settings-btn" class="btn">⚙️</a>
     </div>
 
     <div id="my-map"></div>
@@ -20,5 +34,26 @@
     <script src="js/leafletMap.js"></script>
 
     <div id="tooltip"></div>
+
+    <script>
+      document
+        .getElementById("settings-btn")
+        .addEventListener("click", function () {
+          document.getElementById("settings-popup").style.display = "block";
+        });
+
+      document
+        .getElementById("close-popup")
+        .addEventListener("click", function () {
+          document.getElementById("settings-popup").style.display = "none";
+        });
+
+      window.addEventListener("click", function (event) {
+        let popup = document.getElementById("settings-popup");
+        if (event.target === popup) {
+          popup.style.display = "none";
+        }
+      });
+    </script>
   </body>
 </html>
