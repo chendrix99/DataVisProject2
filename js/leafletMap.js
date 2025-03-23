@@ -1,3 +1,5 @@
+let apikey = "d8eb308191df42d3add88b975fe90ff6";
+
 class LeafletMap {
   /**
    * Class constructor with basic configuration
@@ -30,8 +32,7 @@ class LeafletMap {
       'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
 
     //Thunderforest Outdoors-
-    vis.thOutUrl =
-      "https://{s}.tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey={apikey}";
+    vis.thOutUrl = `https://{s}.tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=${apikey}`;
     vis.thOutAttr =
       '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
