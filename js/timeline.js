@@ -40,7 +40,6 @@ class Timeline {
             .attr("width", vis.width)
             .attr("height", vis.height);
 
-
         // Magnitude scale (for bar height)
         vis.magScale = d3.scaleLinear()
             .domain([0, d3.max(vis.data, d => d.mag)])
@@ -143,12 +142,11 @@ class Timeline {
     }
 }
 
-
 function getColor(mag) {
-    if (mag < 3) return "blue";
-    if (mag < 4) return "green";
-    if (mag < 4.5) return "yellow";
-    if (mag < 5) return "gold";
-    if (mag < 5.5) return "orange";
-    return "red";
+  if (mag < 3) return "blue";
+  if (mag < 4) return "green";
+  if (mag < 4.5) return "yellow";
+  if (mag < 5) return "gold";
+  if (mag < 5.5) return "orange";
+  return "red";
 }

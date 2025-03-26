@@ -11,6 +11,11 @@ let timelineBrush = null;
 
 let mapBrush = null;
 
+let animationInterval;
+let currentIndex = 0;
+let isPlaying = false;
+let animationSpeed = 100;
+
 // Load earthquake data from CSV
 Promise.all([
   d3.csv("data/2014-2025.csv"), // We will just use year 2013 to ref this full data since we arent using that year.
@@ -55,7 +60,7 @@ Promise.all([
     // Initialize timeline and map
     updateVisualization();
   })
-  .catch(error => console.error(error));
+  .catch((error) => console.error(error));
 
 // Function to update timeline and map based on the current year
 function updateVisualization() {
@@ -79,12 +84,12 @@ function updateVisualization() {
 
 // Create navigation buttons
 document.addEventListener("DOMContentLoaded", () => {
-  const container = document.getElementById("timeline-container");
+  const prevButton = document.getElementById("prev-year");
+  const nextButton = document.getElementById("next-year");
+  const yearLabel = document.getElementById("year-label");
+  const playPauseButton = document.getElementById("play-pause-button");
 
-  // Previous Year Button
-  const prevButton = document.createElement("button");
-  prevButton.textContent = "<- previous year";
-  prevButton.className = "nav-button left";
+  // Previous Year
   prevButton.addEventListener("click", () => {
     if (currentYear === 2014) {
       return;
@@ -93,13 +98,10 @@ document.addEventListener("DOMContentLoaded", () => {
     timeline.startDate.setFullYear(timeline.startDate.getFullYear()-1);
     timeline.endDate.setFullYear(timeline.endDate.getFullYear()-1);
     applyFilters();
-    document.getElementById("year-label").textContent = currentYear;
+    yearLabel.textContent = currentYear;
   });
 
-  // Next Year Button
-  const nextButton = document.createElement("button");
-  nextButton.textContent = "next year ->";
-  nextButton.className = "nav-button right";
+  // Next Year
   nextButton.addEventListener("click", () => {
     if (currentYear === 2025) {
       return;
@@ -108,15 +110,17 @@ document.addEventListener("DOMContentLoaded", () => {
     timeline.startDate.setFullYear(timeline.startDate.getFullYear()+1);
     timeline.endDate.setFullYear(timeline.endDate.getFullYear()+1);
     applyFilters();
-    document.getElementById("year-label").textContent = currentYear;
+    yearLabel.textContent = currentYear;
   });
 
-  // Year Label
-  const yearLabel = document.createElement("span");
-  yearLabel.id = "year-label";
-  yearLabel.textContent = currentYear;
-  yearLabel.style.fontSize = "20px";
-  yearLabel.style.margin = "0 15px";
+  // Animation Code
+  document.getElementById("speed-up").addEventListener("click", () => {
+    if (animationSpeed > 50) {
+      // Prevents excessive fast-forwarding
+      animationSpeed -= 50;
+      updateAnimationSpeed();
+    }
+  });
 
   // Explain the reset button
   const resetText = document.createElement("span");
@@ -135,16 +139,70 @@ document.addEventListener("DOMContentLoaded", () => {
     updateVisualization();
   });
 
-  // Button Container
-  const buttonContainer = document.createElement("div");
-  buttonContainer.className = "button-container";
-  buttonContainer.appendChild(prevButton);
-  buttonContainer.appendChild(yearLabel);
-  buttonContainer.appendChild(nextButton);
-  buttonContainer.appendChild(resetText);
-  buttonContainer.appendChild(resetButton);
+  document.getElementById("nonmap-container").appendChild(resetText);
+  document.getElementById("nonmap-container").appendChild(resetButton);
 
-  document.body.appendChild(buttonContainer);
+  document.getElementById("speed-back").addEventListener("click", () => {
+    animationSpeed += 50;
+    updateAnimationSpeed();
+  });
+
+  document.getElementById("stop-button").addEventListener("click", () => {
+    clearInterval(animationInterval); // Stop the animation
+    isPlaying = false;
+    currentIndex = 0;
+    updateVisualization();
+    document.getElementById("play-pause-button").innerHTML =
+      '<i class="fa fa-play fa-2x"></i>';
+  });
+
+  playPauseButton.addEventListener("click", () => {
+    if (isPlaying) {
+      clearInterval(animationInterval);
+      isPlaying = false;
+      playPauseButton.innerHTML = '<i class="fa fa-play fa-2x"></i>';
+    } else {
+      isPlaying = true;
+      playPauseButton.innerHTML = '<i class="fa fa-pause fa-2x"></i>';
+      startAnimation();
+    }
+  });
+
+  function startAnimation() {
+    if (isPlaying) {
+      clearInterval(animationInterval); // Ensure no overlapping intervals
+      animationInterval = setInterval(playNextFrame, animationSpeed);
+    }
+  }
+
+  function playNextFrame() {
+    let filteredData = dataDictionary[currentYear];
+
+    filteredData = applyFilters();
+
+    let currentDataSubset = filteredData.slice(0, currentIndex + 1);
+
+    timeline.data = currentDataSubset;
+    timeline.updateVis();
+    leafletMap.updateData(currentDataSubset);
+
+    currentIndex++;
+
+    if (currentIndex >= filteredData.length) {
+      clearInterval(animationInterval);
+      isPlaying = false;
+      playPauseButton.innerHTML = '<i class="fa fa-play fa-2x"></i>';
+    }
+  }
+
+  function updateAnimationSpeed() {
+    if (isPlaying) {
+      clearInterval(animationInterval);
+      animationInterval = setInterval(playNextFrame, animationSpeed);
+    }
+    document.querySelector(".animation_speed").textContent =
+      animationSpeed + " ms";
+  }
 });
 
 // Event listeners for filter buttons
@@ -157,27 +215,34 @@ function applyFilters() {
   if (document.getElementById("filter-depth").checked) {
     let minDepth = parseFloat(document.getElementById("min-depth").value);
     let maxDepth = parseFloat(document.getElementById("max-depth").value);
-    filteredData = filteredData.filter(d => 
-      (isNaN(minDepth) || d.depth >= minDepth) && 
-      (isNaN(maxDepth) || d.depth <= maxDepth)
+    filteredData = filteredData.filter(
+      (d) =>
+        (isNaN(minDepth) || d.depth >= minDepth) &&
+        (isNaN(maxDepth) || d.depth <= maxDepth)
     );
   }
 
   if (document.getElementById("filter-magnitude").checked) {
-    let minMagnitude = parseFloat(document.getElementById("min-magnitude").value);
-    let maxMagnitude = parseFloat(document.getElementById("max-magnitude").value);
-    filteredData = filteredData.filter(d => 
-      (isNaN(minMagnitude) || d.mag >= minMagnitude) && 
-      (isNaN(maxMagnitude) || d.mag <= maxMagnitude)
+    let minMagnitude = parseFloat(
+      document.getElementById("min-magnitude").value
+    );
+    let maxMagnitude = parseFloat(
+      document.getElementById("max-magnitude").value
+    );
+    filteredData = filteredData.filter(
+      (d) =>
+        (isNaN(minMagnitude) || d.mag >= minMagnitude) &&
+        (isNaN(maxMagnitude) || d.mag <= maxMagnitude)
     );
   }
 
   if (document.getElementById("filter-duration").checked) {
     let minDuration = parseFloat(document.getElementById("min-duration").value);
     let maxDuration = parseFloat(document.getElementById("max-duration").value);
-    filteredData = filteredData.filter(d => 
-      (isNaN(minDuration) || d.duration >= minDuration) && 
-      (isNaN(maxDuration) || d.duration <= maxDuration)
+    filteredData = filteredData.filter(
+      (d) =>
+        (isNaN(minDuration) || d.duration >= minDuration) &&
+        (isNaN(maxDuration) || d.duration <= maxDuration)
     );
   }
 
@@ -200,6 +265,7 @@ function applyFilters() {
   timeline.data = filteredData;
   timeline.updateVis();
   leafletMap.updateData(filteredData);
+  return filteredData;
 }
 
 function clearFilters() {
