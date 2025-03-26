@@ -1,7 +1,15 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Interactive map with Leaflet</title>
+    <title>Earthquake Tracker</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;800&display=swap"
+      rel="stylesheet"
+    />
     <link rel="icon" href="data:;base64,iVBORwOKGO=" />
     <link rel="stylesheet" href="css/leaflet.css" />
     <link rel="stylesheet" href="css/style.css" />
@@ -12,7 +20,7 @@
         <span class="close-btn" id="close-popup">&times;</span>
         <h2>Settings</h2>
         <p>Change the map background:</p>
-        <select id="map-style-select">
+        <select class="filter-input" id="map-style-select">
           <option value="Esri.WorldImagery">Esri Satellite</option>
           <option value="OpenTopoMap">OpenTopoMap</option>
           <option value="Thunderforest.Outdoors">Thunderforest Outdoors</option>
@@ -21,71 +29,42 @@
       </div>
     </div>
 
-    <div class="settings">
-      <a id="settings-btn" class="btn">⚙️</a>
-    </div>
-
-    <div id="map-container">
-      <div id="my-map"></div>
-      <div id="side-filter-container">
-        <div class="filter-group">
-          <input type="checkbox" id="filter-depth" />
-          <label for="filter-depth">Depth</label>
-          <input
-            type="number"
-            class="filter-input"
-            id="min-depth"
-            placeholder="Min"
-          />
-          <input
-            type="number"
-            class="filter-input"
-            id="max-depth"
-            placeholder="Max"
-          />
-        </div>
-        <div class="filter-group">
-          <input type="checkbox" id="filter-magnitude" />
-          <label for="filter-magnitude">Magnitude</label>
-          <input
-            type="number"
-            class="filter-input"
-            id="min-magnitude"
-            placeholder="Min"
-          />
-          <input
-            type="number"
-            class="filter-input"
-            id="max-magnitude"
-            placeholder="Max"
-          />
-        </div>
-        <div class="filter-group">
-          <input type="checkbox" id="filter-duration" />
-          <label for="filter-duration">Duration</label>
-          <input
-            type="number"
-            class="filter-input"
-            id="min-duration"
-            placeholder="Min"
-          />
-          <input
-            type="number"
-            class="filter-input"
-            id="max-duration"
-            placeholder="Max"
-          />
-        </div>
-        <button id="apply-filter">Filter</button>
-        <button id="clear-filter">Clear</button>
-        <div>
-          <input type="checkbox" id="toggle-dragging" checked/>
-          <label for="map">Toggle to Enable Dragging on Map</label>
+    <div class="center_map_timeline">
+      <h2>Earthquake Tracker</h2>
+      <div id="map-container">
+        <div id="my-map"></div>
+      </div>
+      <br />
+      <br />
+      <div id="nonmap-container">
+        <div id="timeline-container"></div>
+        <div class="button-container">
+          <button id="prev-year" class="nav-button left">
+            <i class="fa fa-chevron-circle-left fa-2x"></i>
+          </button>
+          <span id="year-label" style="font-size: 20px; margin: 0 15px"
+            >2025</span
+          >
+          <button id="next-year" class="nav-button right">
+            <i class="fa fa-chevron-circle-right fa-2x"></i>
+          </button>
+          <br />
+          <br />
+          <button id="speed-back">
+            <i class="fa fa-backward fa-2x"></i>
+          </button>
+          <button id="play-pause-button">
+            <i class="fa fa-play fa-2x"></i>
+          </button>
+          <button id="stop-button">
+            <i class="fa fa-stop fa-2x"></i>
+          </button>
+          <button id="speed-up">
+            <i class="fa fa-forward fa-2x"></i>
+          </button>
+          <p><span class="animation_speed">100 ms</span> Interval</p>
         </div>
       </div>
-    </div>
-    <div id="nonmap-container">
-      <div id="timeline-container"></div>
     </div>
 
     <script src="js/d3.v6.min.js"></script>
@@ -96,6 +75,88 @@
     <script src="js/timeline.js"></script>
 
     <div id="tooltip"></div>
+
+    <div id="toggleDrawer" class="options_drawer_btn">
+      <i class="fa fa-chevron-circle-up fa-3x"></i>
+    </div>
+
+    <div id="drawer" class="drawer">
+      <div class="drawer-content">
+        <h2>Data Manager</h2>
+        <p>Adjust the data being shown here.</p>
+        <div id="side-filter-container">
+          <div class="filter-group">
+            <b>Depth</b>
+            <br />
+            <input type="checkbox" id="filter-depth" />
+            <label for="filter-depth">Enable</label>
+            <br />
+            <input
+              type="number"
+              class="filter-input"
+              id="min-depth"
+              placeholder="Min"
+            />
+            <input
+              type="number"
+              class="filter-input"
+              id="max-depth"
+              placeholder="Max"
+            />
+          </div>
+          <div class="filter-group">
+            <br />
+            <b>Magnitude</b>
+            <br />
+            <input type="checkbox" id="filter-magnitude" />
+            <label for="filter-magnitude">Enable</label>
+            <br />
+            <input
+              type="number"
+              class="filter-input"
+              id="min-magnitude"
+              placeholder="Min"
+            />
+            <input
+              type="number"
+              class="filter-input"
+              id="max-magnitude"
+              placeholder="Max"
+            />
+          </div>
+          <div class="filter-group">
+            <br />
+            <b>Duration</b>
+            <br />
+            <input type="checkbox" id="filter-duration" />
+            <label for="filter-duration">Enable</label>
+            <br />
+            <input
+              type="number"
+              class="filter-input"
+              id="min-duration"
+              placeholder="Min"
+            />
+            <input
+              type="number"
+              class="filter-input"
+              id="max-duration"
+              placeholder="Max"
+            />
+          </div>
+          <br />
+          <button class="btnm" id="apply-filter">Apply</button>
+          <button class="btnm" id="clear-filter">Clear</button>
+          <div>
+            <input type="checkbox" id="toggle-dragging" checked/>
+            <label for="map">Toggle to Enable Dragging on Map</label>
+          </div>
+        </div>
+      </div>
+      <div class="settings">
+        <a id="settings-btn" class="btn"><i class="fa fa-gear fa-1x"></i></a>
+      </div>
+    </div>
 
     <script>
       document
@@ -114,6 +175,21 @@
         let popup = document.getElementById("settings-popup");
         if (event.target === popup) {
           popup.style.display = "none";
+        }
+      });
+
+      const toggleDrawerButton = document.getElementById("toggleDrawer");
+      const drawer = document.getElementById("drawer");
+
+      toggleDrawerButton.addEventListener("click", () => {
+        drawer.classList.toggle("open");
+
+        if (drawer.classList.contains("open")) {
+          toggleDrawerButton.innerHTML =
+            '<i class="fa fa-chevron-circle-down fa-3x"></i>';
+        } else {
+          toggleDrawerButton.innerHTML =
+            '<i class="fa fa-chevron-circle-up fa-3x"></i>';
         }
       });
     </script>
