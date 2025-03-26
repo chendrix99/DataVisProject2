@@ -1,96 +1,146 @@
-export function createTimeline(container, data, year) {
-    console.log(`Creating timeline for year: ${year}`);
+class Timeline {
+    constructor(_config, _data, _startDate, _endDate) {
+        this.config = {
+            parentElement: _config.parentElement,
+            containerWidth: _config.containerWidth || 1200,
+            containerHeight: _config.containerHeight || 150,
+            margin: _config.margin || {top: 1, right: 1, bottom: 1, left: 1},
+            tooltipPadding: 10
+        }
 
-    const width = 1200;
-    const height = 150;
-    const timelineY = height / 2;
+        this.data = _data;
 
-    // Parse and filter data
-    const parsedData = data
-        .map(d => ({
-            timestamp: new Date(d.time),
-            mag: +d.mag,
-            depth: +d.depth
-        }))
-        .filter(d => d.timestamp.getFullYear() === year);
+        this.startDate = _startDate;
+        this.endDate = _endDate;
 
-    console.log(`Filtered Data (${year}):`, parsedData);
+        this.onEndBrush = () => {};
 
-    // Clear previous visualization
-    d3.select(container).select("svg").remove();
+        this.initVis();
+    }
 
-    // Set timeline domain
-    const xDomain = [new Date(`${year}-01-01`), new Date(`${year}-12-31`)];
+    initVis() {
+        let vis = this;
 
-    // Create time scale
-    const xScale = d3.scaleTime()
-        .domain(xDomain)
-        .range([50, width - 50]);
+        // Calculate inner chart size
+        vis.width = vis.config.containerWidth - vis.config.margin.left - vis.config.margin.right;
+        vis.height = vis.config.containerHeight - vis.config.margin.top - vis.config.margin.bottom;
+        vis.timelineY = vis.height / 2;
 
-    // Create SVG container
-    const svg = d3.select(container)
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height);
+        // Set timeline domain
+        vis.xDomain = [vis.startDate, vis.endDate];
 
+        // Create time scale
+        vis.xScale = d3.scaleTime()
+            .domain(vis.xDomain)
+            .range([50, vis.width - 50]);
 
-    // Magnitude scale (for bar height)
-    const magScale = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.mag)])
-        .range([5, height]); // Ensures bars are tall enough
+        // Create SVG container
+        vis.svg = d3.select(vis.config.parentElement)
+            .append("svg")
+            .attr("width", vis.width)
+            .attr("height", vis.height);
 
 
-    // Add bars (one per earthquake)
-    svg.selectAll(".quake-bar")
-        .data(parsedData)
-        .join("line")
-        .attr("x1", d => xScale(d.timestamp))
-        .attr("x2", d => xScale(d.timestamp))
-        .attr("y1", height - 60) // Start at baseline
-        .attr("y2", d => height - magScale(d.mag)) // Scale height based on magnitude
-        .attr("stroke", d => getColor(d.mag)) // Use the same color function as dots
-        .attr("stroke-width", 2.5)
-        .attr("opacity", 0.7);
+        // Magnitude scale (for bar height)
+        vis.magScale = d3.scaleLinear()
+            .domain([0, d3.max(vis.data, d => d.mag)])
+            .range([5, vis.height]); // Ensures bars are tall enough
 
-    const depthScale = d3.scaleLinear()
-        .domain([0, d3.max(parsedData, d => d.depth)]) // Depth domain
-        .range([0, 20]); // Controls bar length (adjust if needed)
-    
-    // // Add downward bars for depth
-    svg.selectAll(".depth-bar")
-        .data(parsedData)
-        .join("line")
-        .attr("x1", d => xScale(d.timestamp))
-        .attr("x2", d => xScale(d.timestamp))
-        .attr("y1", timelineY + 13) // Start slightly below timeline
-        .attr("y2", d => timelineY + 20 + depthScale(d.depth)) // Extend downward
-        .attr("stroke", "lightgray")
-        .attr("stroke-width", 2)
-        .attr("opacity", 0.6);
-
-    const xAxis = d3.axisBottom(xScale).ticks(12).tickFormat(d3.timeFormat("%b"));
-        svg.append("g")
-            .attr("transform", `translate(0, ${height - (height/2)+12})`)
-            .call(xAxis);
+        vis.depthScale = d3.scaleLinear()
+            .domain([0, d3.max(vis.data, d => d.depth)]) // Depth domain
+            .range([0, 20]); // Controls bar length (adjust if needed)
 
         // Add Magnitude Label (above the axis)
-    svg.append("text")
-        .attr("x", 60) // Position on the left
-        .attr("y", timelineY - 60) // Slightly above the timeline
-        .attr("text-anchor", "end")
-        .attr("font-size", "14px")
-        .attr("fill", "black")
-        .text("Magnitude");
+        vis.svg.append("text")
+            .attr("x", 70) // Position on the left
+            .attr("y", vis.timelineY - 60) // Slightly above the timeline
+            .attr("text-anchor", "end")
+            .attr("font-size", "14px")
+            .attr("fill", "black")
+            .text("Magnitude");
+    
+        // Add Depth Label (below the axis)
+        vis.svg.append("text")
+            .attr("x", 50) // Align with Magnitude label
+            .attr("y", vis.timelineY + 50) // Slightly below the timeline
+            .attr("text-anchor", "end")
+            .attr("font-size", "14px")
+            .attr("fill", "black")
+            .text("Depth");
 
-    // Add Depth Label (below the axis)
-    svg.append("text")
-        .attr("x", 50) // Align with Magnitude label
-        .attr("y", timelineY + 50) // Slightly below the timeline
-        .attr("text-anchor", "end")
-        .attr("font-size", "14px")
-        .attr("fill", "black")
-        .text("Depth");
+        vis.xAxis = d3.axisBottom(vis.xScale).ticks(12).tickFormat(d3.timeFormat("%b"));
+        vis.xAxisG = vis.svg.append("g");
+    
+        // Initialize brush component
+        vis.brushG = vis.svg.append('g')
+            .attr('class', 'brush x-brush');
+    
+        vis.brush = d3.brush()
+            .extent([[0, 0], [vis.width, vis.height]])
+            .on('end', (event) => {
+                vis.onEndBrush(event, vis);
+            });
+    }
 
+    updateVis() {
+        let vis = this;
+
+        // Reset the x scale
+        vis.xDomain = [vis.startDate, vis.endDate];
+
+        vis.xScale = d3.scaleTime()
+            .domain(vis.xDomain)
+            .range([50, vis.width - 50]);
+        
+        let tickNum = vis.endDate.getMonth() - vis.startDate.getMonth() + 1;
+        vis.xAxis = d3.axisBottom(vis.xScale).ticks(tickNum).tickFormat(d3.timeFormat("%b"));
+
+        vis.renderVis();
+    }
+
+    renderVis() {
+        let vis = this;
+
+        let quake_bars = vis.svg.selectAll(".quake-bar")
+            .data(vis.data)
+            .join('line');
+
+        // Add bars (one per earthquake)
+        quake_bars
+            .attr("x1", d => vis.xScale(d.timestamp))
+            .attr("x2", d => vis.xScale(d.timestamp))
+            .attr("y1", vis.height - 60) // Start at baseline
+            .attr("y2", d => vis.height - vis.magScale(d.mag)) // Scale height based on magnitude
+            .attr("time", d => d.time) // This becomes useful to find the time bounds after brushing
+            .attr("stroke", d => getColor(d.mag)) // Use the same color function as dots
+            .attr("stroke-width", 2.5)
+            .attr("opacity", 0.7)
+            .attr('class', 'quake-bar');
+
+        let depth_bars = vis.svg.selectAll(".depth-bar")
+            .data(vis.data)
+            .join('line');
+
+        // Add downward bars for depth
+        depth_bars
+            .attr("x1", d => vis.xScale(d.timestamp))
+            .attr("x2", d => vis.xScale(d.timestamp))
+            .attr("y1", vis.timelineY + 13) // Start slightly below timeline
+            .attr("y2", d => vis.timelineY + 20 + vis.depthScale(d.depth)) // Extend downward
+            .attr("stroke", "lightgray")
+            .attr("stroke-width", 2)
+            .attr("opacity", 0.6)
+            .attr('class', 'depth-bar');
+
+        // Call the xAxis
+        vis.xAxisG.remove();
+        vis.xAxisG = vis.svg.append("g")
+            .attr("transform", `translate(0, ${vis.height - (vis.height/2)+12})`)
+            .call(vis.xAxis);
+
+        // Call brush
+        vis.brushG.call(vis.brush);
+    }
 }
 
 
@@ -102,4 +152,3 @@ function getColor(mag) {
     if (mag < 5.5) return "orange";
     return "red";
 }
-

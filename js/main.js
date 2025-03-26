@@ -1,25 +1,56 @@
-import { createTimeline } from "./timeline.js";
-
 let earthquakeData = []; // Store CSV data globally
 let currentYear = 2024; // Default starting year
 let leafletMap; // Placeholder for map instance
+let timeline; // class holder for the timeline
+
+// Trying to increase performance by eliminating filtering by year.
+// Seems like the main bottleneck is updating the map, which cant be helped.
+let dataDictionary = {};
+
+let timelineBrush = null;
+
+let mapBrush = null;
 
 // Load earthquake data from CSV
-d3.csv("data/2014-2025.csv")
-  .then(data => {
-    console.log("Number of items:", data.length);
+Promise.all([
+  d3.csv("data/2014-2025.csv"), // We will just use year 2013 to ref this full data since we arent using that year.
+  d3.csv("data/2014.csv"),
+  d3.csv("data/2015.csv"),
+  d3.csv("data/2016.csv"),
+  d3.csv("data/2017.csv"),
+  d3.csv("data/2018.csv"),
+  d3.csv("data/2019.csv"),
+  d3.csv("data/2020.csv"),
+  d3.csv("data/2021.csv"),
+  d3.csv("data/2022.csv"),
+  d3.csv("data/2023.csv"),
+  d3.csv("data/2024.csv"),
+  d3.csv("data/2025.csv")
+]).then(_data => {
+    var year = 2013;
+    // Populate the data dictionary for faster loading/filtering
+    _data.forEach(csv => {
+      // Convert values and check for missing magnitude
+      csv.forEach(d => {
+        if (!d.mag) console.warn("Missing mag value for:", d);
+        d.latitude = +d.latitude;
+        d.longitude = +d.longitude;
+        d.mag = +d.mag;
+        d.depth = +d.depth;
+        d.duration = +d.duration;
+        d.timestamp = new Date(d.time);
+      });
 
-    // Convert values and check for missing magnitude
-    data.forEach(d => {
-      if (!d.mag) console.warn("Missing mag value for:", d);
-      d.latitude = +d.latitude;
-      d.longitude = +d.longitude;
-      d.mag = +d.mag;
-      d.depth = +d.depth;
-      d.duration = +d.duration;
+      dataDictionary[year] = csv;
+      year++;
     });
 
-    earthquakeData = data; // Store the dataset globally
+    let currData = dataDictionary[currentYear];
+
+    timeline = new Timeline({
+      'parentElement': "#timeline-container"
+    }, currData, new Date(`${currentYear}-01-01 00:00:00`), new Date(`${currentYear}-12-31 23:59:59`));
+    timeline.onEndBrush = handleTimelineBrush;
 
     // Initialize timeline and map
     updateVisualization();
@@ -28,14 +59,21 @@ d3.csv("data/2014-2025.csv")
 
 // Function to update timeline and map based on the current year
 function updateVisualization() {
-  let filteredData = earthquakeData.filter(d => new Date(d.time).getFullYear() === currentYear);
-  createTimeline("#timeline-container", filteredData, currentYear);
+  let currData = dataDictionary[currentYear];
+
+  timeline.data = currData;
+  timeline.startDate = new Date(`${currentYear}-01-01 00:00:00`);
+  timeline.endDate = new Date(`${currentYear}-12-31 23:59:59`);
+  timeline.updateVis();
+
   document.getElementById("year-label").textContent = currentYear;
 
   if (leafletMap) {
-    leafletMap.updateData(filteredData); // Assuming `updateData` exists in your LeafletMap class
+    leafletMap.updateData(currData); // Assuming `updateData` exists in your LeafletMap class
   } else {
-    leafletMap = new LeafletMap({ parentElement: "#my-map" }, filteredData);
+    leafletMap = new LeafletMap({ parentElement: "#my-map" }, currData);
+    leafletMap.onEndBrush = handleMapBrush;
+    leafletMap.disableBrush();
   }
 }
 
@@ -48,8 +86,14 @@ document.addEventListener("DOMContentLoaded", () => {
   prevButton.textContent = "<- previous year";
   prevButton.className = "nav-button left";
   prevButton.addEventListener("click", () => {
+    if (currentYear === 2014) {
+      return;
+    }
     currentYear--;
-    updateVisualization();
+    timeline.startDate.setFullYear(timeline.startDate.getFullYear()-1);
+    timeline.endDate.setFullYear(timeline.endDate.getFullYear()-1);
+    applyFilters();
+    document.getElementById("year-label").textContent = currentYear;
   });
 
   // Next Year Button
@@ -57,8 +101,14 @@ document.addEventListener("DOMContentLoaded", () => {
   nextButton.textContent = "next year ->";
   nextButton.className = "nav-button right";
   nextButton.addEventListener("click", () => {
+    if (currentYear === 2025) {
+      return;
+    }
     currentYear++;
-    updateVisualization();
+    timeline.startDate.setFullYear(timeline.startDate.getFullYear()+1);
+    timeline.endDate.setFullYear(timeline.endDate.getFullYear()+1);
+    applyFilters();
+    document.getElementById("year-label").textContent = currentYear;
   });
 
   // Year Label
@@ -68,12 +118,31 @@ document.addEventListener("DOMContentLoaded", () => {
   yearLabel.style.fontSize = "20px";
   yearLabel.style.margin = "0 15px";
 
+  // Explain the reset button
+  const resetText = document.createElement("span");
+  resetText.id = "reset-text";
+  resetText.textContent = "Press this Reset button to undo the Brush selections in the Timeline and Map: ";
+  yearLabel.style.fontSize = "16px";
+  yearLabel.style.margin = "15px 15px 15px 15px";
+
+  // Reset Button
+  const resetButton = document.createElement("button");
+  resetButton.textContent = "RESET";
+  resetButton.className = "button";
+  resetButton.addEventListener("click", () => {
+    timelineBrush = null;
+    mapBrush = null;
+    updateVisualization();
+  });
+
   // Button Container
   const buttonContainer = document.createElement("div");
   buttonContainer.className = "button-container";
   buttonContainer.appendChild(prevButton);
   buttonContainer.appendChild(yearLabel);
   buttonContainer.appendChild(nextButton);
+  buttonContainer.appendChild(resetText);
+  buttonContainer.appendChild(resetButton);
 
   document.body.appendChild(buttonContainer);
 });
@@ -83,7 +152,7 @@ document.getElementById("apply-filter").addEventListener("click", applyFilters);
 document.getElementById("clear-filter").addEventListener("click", clearFilters);
 
 function applyFilters() {
-  let filteredData = earthquakeData.filter(d => new Date(d.time).getFullYear() === currentYear);
+  let filteredData = dataDictionary[currentYear];
 
   if (document.getElementById("filter-depth").checked) {
     let minDepth = parseFloat(document.getElementById("min-depth").value);
@@ -112,7 +181,24 @@ function applyFilters() {
     );
   }
 
-  createTimeline("#timeline-container", filteredData, currentYear);
+  if (timelineBrush !== null) {
+    timeline.startDate = timelineBrush.startTime;
+    timeline.endDate = timelineBrush.endTime;
+
+    filteredData = filteredData.filter(d => 
+      (d.timestamp > timelineBrush.startTime) && (d.timestamp < timelineBrush.endTime)
+    );
+  }
+
+  if (mapBrush !== null) {
+    filteredData = filteredData.filter(d => 
+      (d.longitude > mapBrush.topLeft.lng && d.longitude < mapBrush.bottomRight.lng) &&
+      (d.latitude < mapBrush.topLeft.lat && d.latitude > mapBrush.bottomRight.lat)
+    );
+  }
+
+  timeline.data = filteredData;
+  timeline.updateVis();
   leafletMap.updateData(filteredData);
 }
 
@@ -127,4 +213,63 @@ function clearFilters() {
   document.getElementById("min-duration").value = "";
   document.getElementById("max-duration").value = "";
   updateVisualization();
+}
+
+document.getElementById("toggle-dragging").addEventListener("change", handleDragChange);
+
+function handleDragChange() {
+  if (this.checked) {
+    leafletMap.theMap.dragging.enable();
+    leafletMap.disableBrush();
+  } else {
+    leafletMap.theMap.dragging.disable();
+    leafletMap.enableBrush();
+  }
+}
+
+let handleTimelineBrush = (event, vis) => {
+  // Check if the brush is empty (no selection)
+  if (!event.selection) {
+    return;
+  }
+
+  var extent = event.selection;
+  let selectedLines = vis.svg.selectAll('.quake-bar').filter(d => 
+    vis.xScale(d.timestamp) >= extent[0][0] && vis.xScale(d.timestamp) <= extent[1][0]
+  );
+  let times = selectedLines.nodes().map(d => d.getAttribute('time'));
+
+  let startTime = new Date(d3.min(times));
+  let endTime = new Date(d3.max(times));
+
+  timelineBrush = {
+    'startTime': startTime,
+    'endTime': endTime
+  }
+
+  // Clear the brush after processing
+  vis.brushG.call(vis.brush.move, null);
+
+  applyFilters();
+}
+
+let handleMapBrush = (event, vis) => {
+  if (!event.selection) {
+    return;
+  }
+
+  // Convert brush pixel coordinates to map coordinates
+  const [x0, x1] = event.selection;
+  const topLeft = vis.theMap.containerPointToLatLng([x0[0], x0[1]]);
+  const bottomRight = vis.theMap.containerPointToLatLng([x1[0], x1[1]]);
+
+  mapBrush = {
+    'topLeft': topLeft,
+    'bottomRight': bottomRight
+  }
+
+  // Clear the brush after processing
+  vis.brushG.call(vis.brush.move, null);
+
+  applyFilters();
 }

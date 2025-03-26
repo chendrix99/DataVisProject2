@@ -11,6 +11,8 @@ class LeafletMap {
       parentElement: _config.parentElement,
     };
     this.data = _data;
+    this.onEndBrush = () => {};
+    this.canBrush = false;
     this.initVis();
   }
 
@@ -43,7 +45,6 @@ class LeafletMap {
       'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
     //this is the base map layer, where we are showing the map background
-    //**** TO DO - try different backgrounds
     vis.base_layer = L.tileLayer(vis.esriUrl, {
       id: "esri-image",
       attribution: vis.esriAttr,
@@ -135,6 +136,20 @@ class LeafletMap {
         const selectedStyle = this.value;
         vis.updateMapLayer(selectedStyle);
       });
+
+    // Initialize brush component
+    vis.brushG = vis.svg.append('g')
+      .attr('class', 'brush brush');
+
+    vis.brush = d3.brush()
+      .extent([[0, 0], [vis.theMap.getSize().x, vis.theMap.getSize().y]])
+      .on('end', (event) => {
+          vis.onEndBrush(event, vis);
+      });
+
+    // Call brush
+    if (vis.canBrush)
+      vis.brushG.call(vis.brush);
   }
 
   updateMapLayer(style) {
@@ -201,6 +216,11 @@ class LeafletMap {
       )
       .attr("fill", (d) => getColor(d.mag)) //---- TO DO- color by magnitude
       .attr("r", 3);
+
+    vis.resetBrush();
+
+    if (vis.canBrush)
+      vis.brushG.call(vis.brush);
   }
 
   renderVis() {
@@ -266,6 +286,33 @@ class LeafletMap {
     });
 
     vis.updateVis();
+  }
+
+  enableBrush() {
+    let vis = this;
+    vis.brushG.call(vis.brush);
+    vis.canBrush = true;
+  }
+
+  disableBrush() {
+    let vis = this;
+    vis.brushG.on('.brush', null);
+
+    vis.canBrush = false;
+  }
+
+  resetBrush() {
+    let vis = this;
+
+    vis.brushG.remove();
+    vis.brushG = vis.svg.append('g')
+      .attr('class', 'brush brush');
+
+    vis.brush = d3.brush()
+      .extent([[0, 0], [vis.theMap.getSize().x, vis.theMap.getSize().y]])
+      .on('end', (event) => {
+          vis.onEndBrush(event, vis);
+      });
   }
 }
 
