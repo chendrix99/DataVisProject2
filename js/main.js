@@ -52,14 +52,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const yearLabel = document.getElementById("year-label");
   const playPauseButton = document.getElementById("play-pause-button");
 
-  // Previous Year Button Event Listener
+  // Previous Year
   prevButton.addEventListener("click", () => {
     currentYear--;
     yearLabel.textContent = currentYear;
     updateVisualization();
   });
 
-  // Next Year Button Event Listener
+  // Next Year
   nextButton.addEventListener("click", () => {
     currentYear++;
     yearLabel.textContent = currentYear;
@@ -112,6 +112,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let filteredData = earthquakeData.filter(
       (d) => new Date(d.time).getFullYear() === currentYear
     );
+
+    filteredData = applyFilters();
 
     let currentDataSubset = filteredData.slice(0, currentIndex + 1);
 
@@ -182,6 +184,7 @@ function applyFilters() {
 
   createTimeline("#timeline-container", filteredData, currentYear);
   leafletMap.updateData(filteredData);
+  return filteredData;
 }
 
 function clearFilters() {
