@@ -176,15 +176,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function playNextFrame() {
-    let filteredData = earthquakeData.filter(
-      (d) => new Date(d.time).getFullYear() === currentYear
-    );
+    let filteredData = dataDictionary[currentYear];
 
     filteredData = applyFilters();
 
     let currentDataSubset = filteredData.slice(0, currentIndex + 1);
 
-    createTimeline("#timeline-container", currentDataSubset, currentYear);
+    timeline.data = currentDataSubset;
+    timeline.updateVis();
     leafletMap.updateData(currentDataSubset);
 
     currentIndex++;
