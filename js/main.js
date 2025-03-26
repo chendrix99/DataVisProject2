@@ -3,6 +3,10 @@ import { createTimeline } from "./timeline.js";
 let earthquakeData = []; // Store CSV data globally
 let currentYear = 2024; // Default starting year
 let leafletMap; // Placeholder for map instance
+let animationInterval;
+let currentIndex = 0;
+let isPlaying = false;
+let animationSpeed = 100;
 
 // Load earthquake data from CSV
 d3.csv("data/2014-2025.csv")
@@ -46,6 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const prevButton = document.getElementById("prev-year");
   const nextButton = document.getElementById("next-year");
   const yearLabel = document.getElementById("year-label");
+  const playPauseButton = document.getElementById("play-pause-button");
 
   // Previous Year Button Event Listener
   prevButton.addEventListener("click", () => {
@@ -60,6 +65,76 @@ document.addEventListener("DOMContentLoaded", () => {
     yearLabel.textContent = currentYear;
     updateVisualization();
   });
+
+  // Animation Code
+  document.getElementById("speed-up").addEventListener("click", () => {
+    if (animationSpeed > 50) {
+      // Prevents excessive fast-forwarding
+      animationSpeed -= 50;
+      updateAnimationSpeed();
+    }
+  });
+
+  document.getElementById("speed-back").addEventListener("click", () => {
+    animationSpeed += 50;
+    updateAnimationSpeed();
+  });
+
+  document.getElementById("stop-button").addEventListener("click", () => {
+    clearInterval(animationInterval); // Stop the animation
+    isPlaying = false;
+    currentIndex = 0;
+    updateVisualization();
+    document.getElementById("play-pause-button").innerHTML =
+      '<i class="fa fa-play fa-2x"></i>';
+  });
+
+  playPauseButton.addEventListener("click", () => {
+    if (isPlaying) {
+      clearInterval(animationInterval);
+      isPlaying = false;
+      playPauseButton.innerHTML = '<i class="fa fa-play fa-2x"></i>';
+    } else {
+      isPlaying = true;
+      playPauseButton.innerHTML = '<i class="fa fa-pause fa-2x"></i>';
+      startAnimation();
+    }
+  });
+
+  function startAnimation() {
+    if (isPlaying) {
+      clearInterval(animationInterval); // Ensure no overlapping intervals
+      animationInterval = setInterval(playNextFrame, animationSpeed);
+    }
+  }
+
+  function playNextFrame() {
+    let filteredData = earthquakeData.filter(
+      (d) => new Date(d.time).getFullYear() === currentYear
+    );
+
+    let currentDataSubset = filteredData.slice(0, currentIndex + 1);
+
+    createTimeline("#timeline-container", currentDataSubset, currentYear);
+    leafletMap.updateData(currentDataSubset);
+
+    currentIndex++;
+
+    if (currentIndex >= filteredData.length) {
+      clearInterval(animationInterval);
+      isPlaying = false;
+      playPauseButton.innerHTML = '<i class="fa fa-play fa-2x"></i>';
+    }
+  }
+
+  function updateAnimationSpeed() {
+    if (isPlaying) {
+      clearInterval(animationInterval);
+      animationInterval = setInterval(playNextFrame, animationSpeed);
+    }
+    document.querySelector(".animation_speed").textContent =
+      animationSpeed + " ms";
+  }
 });
 
 // Event listeners for filter buttons
