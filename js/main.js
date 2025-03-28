@@ -2,6 +2,8 @@ let earthquakeData = []; // Store CSV data globally
 let currentYear = 2024; // Default starting year
 let leafletMap; // Placeholder for map instance
 let timeline; // class holder for the timeline
+const toggleBtn = document.getElementById("toggle-dragging");
+let isBrushEnabled = false;
 
 // Trying to increase performance by eliminating filtering by year.
 // Seems like the main bottleneck is updating the map, which cant be helped.
@@ -294,19 +296,23 @@ function clearFilters() {
   updateVisualization();
 }
 
-document
-  .getElementById("toggle-dragging")
-  .addEventListener("change", handleDragChange);
+toggleBtn.addEventListener("click", function (event) {
+  event.preventDefault();
 
-function handleDragChange() {
-  if (this.checked) {
-    leafletMap.theMap.dragging.enable();
-    leafletMap.disableBrush();
-  } else {
-    leafletMap.theMap.dragging.disable();
+  isBrushEnabled = !isBrushEnabled;
+
+  if (isBrushEnabled) {
+    toggleBtn.textContent = "Disable Map Brush";
+    toggleBtn.classList.add("active");
     leafletMap.enableBrush();
+    leafletMap.theMap.dragging.disable();
+  } else {
+    toggleBtn.textContent = "Enable Map Brush";
+    toggleBtn.classList.remove("active");
+    leafletMap.disableBrush();
+    leafletMap.theMap.dragging.enable();
   }
-}
+});
 
 let handleTimelineBrush = (event, vis) => {
   // Check if the brush is empty (no selection)
