@@ -30,13 +30,14 @@ Promise.all([
   d3.csv("data/2022.csv"),
   d3.csv("data/2023.csv"),
   d3.csv("data/2024.csv"),
-  d3.csv("data/2025.csv")
-]).then(_data => {
+  d3.csv("data/2025.csv"),
+])
+  .then((_data) => {
     var year = 2013;
     // Populate the data dictionary for faster loading/filtering
-    _data.forEach(csv => {
+    _data.forEach((csv) => {
       // Convert values and check for missing magnitude
-      csv.forEach(d => {
+      csv.forEach((d) => {
         if (!d.mag) console.warn("Missing mag value for:", d);
         d.latitude = +d.latitude;
         d.longitude = +d.longitude;
@@ -52,9 +53,14 @@ Promise.all([
 
     let currData = dataDictionary[currentYear];
 
-    timeline = new Timeline({
-      'parentElement': "#timeline-container"
-    }, currData, new Date(`${currentYear}-01-01 00:00:00`), new Date(`${currentYear}-12-31 23:59:59`));
+    timeline = new Timeline(
+      {
+        parentElement: "#timeline-container",
+      },
+      currData,
+      new Date(`${currentYear}-01-01 00:00:00`),
+      new Date(`${currentYear}-12-31 23:59:59`)
+    );
     timeline.onEndBrush = handleTimelineBrush;
 
     // Initialize timeline and map
@@ -95,8 +101,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     currentYear--;
-    timeline.startDate.setFullYear(timeline.startDate.getFullYear()-1);
-    timeline.endDate.setFullYear(timeline.endDate.getFullYear()-1);
+    timeline.startDate.setFullYear(timeline.startDate.getFullYear() - 1);
+    timeline.endDate.setFullYear(timeline.endDate.getFullYear() - 1);
     applyFilters();
     yearLabel.textContent = currentYear;
   });
@@ -107,8 +113,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     currentYear++;
-    timeline.startDate.setFullYear(timeline.startDate.getFullYear()+1);
-    timeline.endDate.setFullYear(timeline.endDate.getFullYear()+1);
+    timeline.startDate.setFullYear(timeline.startDate.getFullYear() + 1);
+    timeline.endDate.setFullYear(timeline.endDate.getFullYear() + 1);
     applyFilters();
     yearLabel.textContent = currentYear;
   });
@@ -122,21 +128,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Explain the reset button
+  //Explain the reset button
   const resetText = document.createElement("span");
   resetText.id = "reset-text";
-  resetText.textContent = "Press this Reset button to undo the Brush selections in the Timeline and Map: ";
+  resetText.textContent = "";
   yearLabel.style.fontSize = "16px";
   yearLabel.style.margin = "15px 15px 15px 15px";
 
   // Reset Button
   const resetButton = document.createElement("button");
-  resetButton.textContent = "RESET";
+  resetButton.textContent = "Reset Brush";
   resetButton.className = "button";
   resetButton.addEventListener("click", () => {
     timelineBrush = null;
     mapBrush = null;
     updateVisualization();
+    applyFilters();
   });
 
   document.getElementById("nonmap-container").appendChild(resetText);
@@ -250,15 +257,20 @@ function applyFilters() {
     timeline.startDate = timelineBrush.startTime;
     timeline.endDate = timelineBrush.endTime;
 
-    filteredData = filteredData.filter(d => 
-      (d.timestamp > timelineBrush.startTime) && (d.timestamp < timelineBrush.endTime)
+    filteredData = filteredData.filter(
+      (d) =>
+        d.timestamp > timelineBrush.startTime &&
+        d.timestamp < timelineBrush.endTime
     );
   }
 
   if (mapBrush !== null) {
-    filteredData = filteredData.filter(d => 
-      (d.longitude > mapBrush.topLeft.lng && d.longitude < mapBrush.bottomRight.lng) &&
-      (d.latitude < mapBrush.topLeft.lat && d.latitude > mapBrush.bottomRight.lat)
+    filteredData = filteredData.filter(
+      (d) =>
+        d.longitude > mapBrush.topLeft.lng &&
+        d.longitude < mapBrush.bottomRight.lng &&
+        d.latitude < mapBrush.topLeft.lat &&
+        d.latitude > mapBrush.bottomRight.lat
     );
   }
 
@@ -281,7 +293,9 @@ function clearFilters() {
   updateVisualization();
 }
 
-document.getElementById("toggle-dragging").addEventListener("change", handleDragChange);
+document
+  .getElementById("toggle-dragging")
+  .addEventListener("change", handleDragChange);
 
 function handleDragChange() {
   if (this.checked) {
@@ -300,24 +314,28 @@ let handleTimelineBrush = (event, vis) => {
   }
 
   var extent = event.selection;
-  let selectedLines = vis.svg.selectAll('.quake-bar').filter(d => 
-    vis.xScale(d.timestamp) >= extent[0][0] && vis.xScale(d.timestamp) <= extent[1][0]
-  );
-  let times = selectedLines.nodes().map(d => d.getAttribute('time'));
+  let selectedLines = vis.svg
+    .selectAll(".quake-bar")
+    .filter(
+      (d) =>
+        vis.xScale(d.timestamp) >= extent[0][0] &&
+        vis.xScale(d.timestamp) <= extent[1][0]
+    );
+  let times = selectedLines.nodes().map((d) => d.getAttribute("time"));
 
   let startTime = new Date(d3.min(times));
   let endTime = new Date(d3.max(times));
 
   timelineBrush = {
-    'startTime': startTime,
-    'endTime': endTime
-  }
+    startTime: startTime,
+    endTime: endTime,
+  };
 
   // Clear the brush after processing
   vis.brushG.call(vis.brush.move, null);
 
   applyFilters();
-}
+};
 
 let handleMapBrush = (event, vis) => {
   if (!event.selection) {
@@ -330,12 +348,12 @@ let handleMapBrush = (event, vis) => {
   const bottomRight = vis.theMap.containerPointToLatLng([x1[0], x1[1]]);
 
   mapBrush = {
-    'topLeft': topLeft,
-    'bottomRight': bottomRight
-  }
+    topLeft: topLeft,
+    bottomRight: bottomRight,
+  };
 
   // Clear the brush after processing
   vis.brushG.call(vis.brush.move, null);
 
   applyFilters();
-}
+};
