@@ -159,6 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
     isPlaying = false;
     currentIndex = 0;
     updateVisualization();
+    applyFilters();
     document.getElementById("play-pause-button").innerHTML =
       '<i class="fa fa-play fa-2x"></i>';
   });
