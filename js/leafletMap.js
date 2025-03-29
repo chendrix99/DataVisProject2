@@ -373,11 +373,14 @@ function showFormattedTooltip(d, event) {
     .style("z-index", 1000000)
     .html(`
       <div style="font-weight: bold; margin-bottom: 5px;">Earthquake Details</div>
-      <div><span style="font-weight: bold;">Time:</span> ${formattedTime}</div>
-      <div><span style="font-weight: bold;">Magnitude:</span> ${formattedMag}</div>
-      <div><span style="font-weight: bold;">Depth:</span> ${formattedDepth} km</div>
+      <div><span style="font-weight: bold;">Time:</span> <span style="font-weight: normal;">${formattedTime}</span></div>
+      <div><span style="font-weight: bold;">Magnitude:</span> <span style="font-weight: normal;">${formattedMag}</span></div>
+      <div><span style="font-weight: bold;">Depth:</span> <span style="font-weight: normal;">${formattedDepth} km</span></div>
     `)
     .style("left", event.pageX + 10 + "px")
     .style("top", event.pageY + 10 + "px");
 }
+
+
+
 
