@@ -328,7 +328,7 @@ let handleTimelineBrush = (event, vis) => {
         vis.xScale(d.timestamp) >= extent[0][0] &&
         vis.xScale(d.timestamp) <= extent[1][0]
     );
-  let times = selectedLines.nodes().map((d) => d.getAttribute("time"));
+  let times = selectedLines.nodes().map((d) => d.getAttribute("data-time"));
 
   let startTime = new Date(d3.min(times));
   let endTime = new Date(d3.max(times));
