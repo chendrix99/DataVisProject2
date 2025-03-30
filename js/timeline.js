@@ -110,7 +110,8 @@ class Timeline {
             .attr("x2", d => vis.xScale(d.timestamp))
             .attr("y1", vis.height - 60) // Start at baseline
             .attr("y2", d => vis.height - vis.magScale(d.mag)) // Scale height based on magnitude
-            .attr("time", d => d.time) // This becomes useful to find the time bounds after brushing
+            .attr("data-time", d => d.time)
+            .attr("id", d => `quake-${d.timestamp.getTime()}`)
             .attr("stroke", d => getColor(d.mag)) // Use the same color function as dots
             .attr("stroke-width", 2.5)
             .attr("opacity", 0.7)

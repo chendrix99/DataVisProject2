@@ -69,6 +69,7 @@ class LeafletMap {
       .selectAll("circle")
       .data(vis.data)
       .join("circle")
+      .attr("data-time", d => d.time)
       .attr("fill", (d) => getColor(d.mag))
       .attr("stroke", "black")
       //Leaflet has to take control of projecting points.
@@ -87,41 +88,61 @@ class LeafletMap {
       .attr("r", (d) => 3)
       .style("opacity", 0.4) // --- TO DO- want to make radius proportional to earthquake size?
       .on("mouseover", function (event, d) {
-        //function to add mouseover event
         d3.select(this)
           .transition()
-          .style("opacity", 0.5) //D3 selects the object we have moused over in order to perform operations on it
-          .duration("150") //how long we are transitioning between the two states (works like keyframes)
-          .attr("fill", (d) => getColor(d.mag))
-          .attr("r", 1.96 ** +d.mag); //change radius
-
-        //create a tool tip
-        d3.select("#tooltip")
-          .style("opacity", 0.9)
-          .style("z-index", 1000000)
-          // Format number with million and thousand separator
-          //***** TO DO- change this tooltip to show useful information about the quakes
-          .html(
-            `<div class="tooltip-label">DateTime: ${
-              d.time
-            }, Magnitude ${d3.format(",")(d.mag)}</div>`
-          );
+          .style("opacity", 0.5)
+          .duration("150")
+          .attr("r", 1.96 ** +d.mag);
+      
+        let quakeId = `quake-${new Date(d.time).getTime()}`;
+        d3.select(`#${quakeId}`)
+          .transition()
+          .duration(150)
+          .attr("stroke", "blue")
+          .attr("stroke-width", 10);
+      
+        showFormattedTooltip(d, event);
       })
+      
       .on("mousemove", (event) => {
         //position the tooltip
         d3.select("#tooltip")
           .style("left", event.pageX + 10 + "px")
           .style("top", event.pageY + 10 + "px");
       })
-      .on("mouseleave", function () {
-        //function to add mouseover event
+      .on("mouseleave", function (event, d) {
+         //function to add mouseover event
         d3.select(this)
           .transition() //D3 selects the object we have moused over in order to perform operations on it
           .duration("150") //how long we are transitioning between the two states (works like keyframes)
           //.attr("fill", "steelblue") //change the fill  TO DO- change fill again
           .attr("r", 3); //change radius
+      
+        if (!d.time) return;
 
-        d3.select("#tooltip").style("opacity", 0.8); //turn off the tooltip
+        let timeValue = new Date(d.time);
+        if (isNaN(timeValue)) return;
+
+        let quakeId = `quake-${timeValue.getTime()}`;
+        d3.select(`#${quakeId}`)
+          .transition()
+          .duration(150)
+          .attr("stroke", getColor(d.mag))
+          .attr("stroke-width", 2.5);
+      
+          const formattedTime = d3.timeFormat("%B %d, %Y %I:%M %p")(timeValue);
+          const formattedMag = d3.format(".2f")(d.mag);
+          const formattedDepth = d3.format(",")(d.depth);
+          
+          d3.select("#tooltip")
+            .style("opacity", 0.95)
+            .style("z-index", 1000000)
+            .html(`
+              <div style="font-weight: bold; margin-bottom: 5px;">Earthquake Details</div>
+              <div><strong>Time:</strong> ${formattedTime}</div>
+              <div><strong>Magnitude:</strong> ${formattedMag}</div>
+              <div><strong>Depth:</strong> ${formattedDepth} km</div>
+            `);
       });
 
     //handler here for updating the map, as you zoom in and out
@@ -243,6 +264,7 @@ class LeafletMap {
       .selectAll("circle")
       .data(vis.data)
       .join("circle")
+      .attr("data-time", d => d.time)
       .attr("fill", (d) => getColor(d.mag))
       .attr("stroke", "black")
       .attr(
@@ -261,23 +283,38 @@ class LeafletMap {
           .style("opacity", 0.5)
           .duration("150")
           .attr("r", 1.96 ** +d.mag);
-
-        d3.select("#tooltip")
-          .style("opacity", 0.9)
-          .html(
-            `<div class="tooltip-label">DateTime: ${
-              d.time
-            }, Magnitude ${d3.format(",")(d.mag)}</div>`
-          );
+      
+        let quakeId = `quake-${new Date(d.time).getTime()}`;
+        d3.select(`#${quakeId}`)
+          .transition()
+          .duration(150)
+          .attr("stroke", "blue")
+          .attr("stroke-width", 10);
+      
+        showFormattedTooltip(d, event);
       })
+      
       .on("mousemove", (event) => {
         d3.select("#tooltip")
           .style("left", event.pageX + 10 + "px")
           .style("top", event.pageY + 10 + "px");
       })
-      .on("mouseleave", function () {
-        d3.select(this).transition().duration("150").attr("r", 3);
-        d3.select("#tooltip").style("opacity", 0.8);
+      .on("mouseleave", function (event, d) {
+        d3.select(this)
+          .transition()
+          .duration(150)
+          .attr("r", 3);
+      
+        let quakeId = `quake-${new Date(d.time).getTime()}`;
+        d3.select(`#${quakeId}`)
+          .transition()
+          .duration(150)
+          .attr("stroke", getColor(d.mag))
+          .attr("stroke-width", 2.5);
+      
+        d3.select("#tooltip")
+          .style("opacity", 0)
+          .style("z-index", -1);
       });
 
     // Ensure dots update their position when zooming
@@ -324,3 +361,26 @@ function getColor(mag) {
   if (mag < 5.5) return "orange";
   return "red";
 }
+
+function showFormattedTooltip(d, event) {
+  const timeValue = new Date(d.time);
+  const formattedTime = d3.timeFormat("%B %d, %Y %I:%M %p")(timeValue);
+  const formattedMag = d3.format(".2f")(d.mag);
+  const formattedDepth = d3.format(",")(d.depth);
+
+  d3.select("#tooltip")
+    .style("opacity", 0.95)
+    .style("z-index", 1000000)
+    .html(`
+      <div style="font-weight: bold; margin-bottom: 5px;">Earthquake Details</div>
+      <div><span style="font-weight: bold;">Time:</span> <span style="font-weight: normal;">${formattedTime}</span></div>
+      <div><span style="font-weight: bold;">Magnitude:</span> <span style="font-weight: normal;">${formattedMag}</span></div>
+      <div><span style="font-weight: bold;">Depth:</span> <span style="font-weight: normal;">${formattedDepth} km</span></div>
+    `)
+    .style("left", event.pageX + 10 + "px")
+    .style("top", event.pageY + 10 + "px");
+}
+
+
+
+
