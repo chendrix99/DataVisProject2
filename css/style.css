@@ -167,3 +167,17 @@ button:hover {
   cursor: pointer;
   text-decoration: none;
 }
+
+
+#color-legend {
+  display: flex;
+  justify-content: center;
+
+}
+
+.legend-item {
+  width: 30px; /* Adjust as needed */
+  height: 30px; /* Adjust as needed */
+  /* Adjust spacing */
+  cursor: pointer;
+}
