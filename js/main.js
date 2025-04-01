@@ -45,7 +45,6 @@ Promise.all([
         d.longitude = +d.longitude;
         d.mag = +d.mag;
         d.depth = +d.depth;
-        d.duration = +d.duration;
         d.timestamp = new Date(d.time);
       });
 
@@ -215,9 +214,37 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// Event listeners for filter buttons
+
+//LOGIC BELOW IS FOR FILTERING
 document.getElementById("apply-filter").addEventListener("click", applyFilters);
 document.getElementById("clear-filter").addEventListener("click", clearFilters);
+
+function handleLegendClick(event) {
+  const legendItem = event.target;
+  const minMagnitude = parseFloat(legendItem.dataset.min);
+  const maxMagnitude = parseFloat(legendItem.dataset.max);
+
+  let filteredData = dataDictionary[currentYear];
+
+  filteredData = filteredData.filter(
+    (d) =>
+      (isNaN(minMagnitude) || d.mag >= minMagnitude) &&
+      (isNaN(maxMagnitude) || d.mag < maxMagnitude)
+  );
+
+  timeline.data = filteredData;
+  timeline.updateVis();
+  leafletMap.updateData(filteredData);
+  return filteredData;
+}
+
+// Attach event listeners to legend items
+document.addEventListener("DOMContentLoaded", function() {
+  const legendItems = document.querySelectorAll(".legend-item");
+  legendItems.forEach((item) => {
+    item.addEventListener("click", handleLegendClick);
+  });
+});
 
 function applyFilters() {
   let filteredData = dataDictionary[currentYear];
@@ -246,15 +273,6 @@ function applyFilters() {
     );
   }
 
-  if (document.getElementById("filter-duration").checked) {
-    let minDuration = parseFloat(document.getElementById("min-duration").value);
-    let maxDuration = parseFloat(document.getElementById("max-duration").value);
-    filteredData = filteredData.filter(
-      (d) =>
-        (isNaN(minDuration) || d.duration >= minDuration) &&
-        (isNaN(maxDuration) || d.duration <= maxDuration)
-    );
-  }
 
   if (timelineBrush !== null) {
     timeline.startDate = timelineBrush.startTime;
@@ -286,13 +304,11 @@ function applyFilters() {
 function clearFilters() {
   document.getElementById("filter-depth").checked = false;
   document.getElementById("filter-magnitude").checked = false;
-  document.getElementById("filter-duration").checked = false;
   document.getElementById("min-depth").value = "";
   document.getElementById("max-depth").value = "";
   document.getElementById("min-magnitude").value = "";
   document.getElementById("max-magnitude").value = "";
-  document.getElementById("min-duration").value = "";
-  document.getElementById("max-duration").value = "";
+
   updateVisualization();
 }
 
