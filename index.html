@@ -82,9 +82,38 @@
 
     <div id="drawer" class="drawer">
       <div class="drawer-content">
-        <h2>Data Manager</h2>
-        <p>Adjust the data being shown here.</p>
+        <h2>Data Filters</h2>
         <div id="side-filter-container">
+          <div id="color-legend-container">
+            Magnitude Color Legend
+            <div id="color-legend">
+              <div class="legend-item-container">
+                <div class="legend-item" data-min="0" data-max="3" style="background-color: blue;"></div>
+                <small class="legend-label">&lt;3</small>
+              </div>
+              <div class="legend-item-container">
+                <div class="legend-item" data-min="3" data-max="4" style="background-color: green;"></div>
+                <small class="legend-label">&lt;4</small>
+              </div>
+              <div class="legend-item-container">
+                <div class="legend-item" data-min="4" data-max="4.5" style="background-color: yellow;"></div>
+                <small class="legend-label">&lt;4.5</small>
+              </div>
+              <div class="legend-item-container">
+                <div class="legend-item" data-min="4.5" data-max="5" style="background-color: gold;"></div>
+                <small class="legend-label">&lt;5</small>
+              </div>
+              <div class="legend-item-container">
+                <div class="legend-item" data-min="5" data-max="5.5" style="background-color: orange;"></div>
+                <small class="legend-label">&lt;5.5</small>
+              </div>
+              <div class="legend-item-container">
+                <div class="legend-item" data-min="5.5" data-max="20" style="background-color: red;" ></div>
+                <small class="legend-label">  5.5+</small>
+              </div>
+            </div>
+            
+          </div>
           <div class="filter-group">
             <b>Depth</b>
             <br />
@@ -121,26 +150,6 @@
               type="number"
               class="filter-input"
               id="max-magnitude"
-              placeholder="Max"
-            />
-          </div>
-          <div class="filter-group">
-            <br />
-            <b>Duration</b>
-            <br />
-            <input type="checkbox" id="filter-duration" />
-            <label for="filter-duration">Enable</label>
-            <br />
-            <input
-              type="number"
-              class="filter-input"
-              id="min-duration"
-              placeholder="Min"
-            />
-            <input
-              type="number"
-              class="filter-input"
-              id="max-duration"
               placeholder="Max"
             />
           </div>
